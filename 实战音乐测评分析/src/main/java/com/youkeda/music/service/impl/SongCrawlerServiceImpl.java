@@ -18,9 +18,7 @@ import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
-/**
- * 音乐抓取服务的实现
- */
+ //音乐抓取服务的实现
 public class SongCrawlerServiceImpl implements SongCrawlerService {
 
   // 歌单 API
@@ -32,21 +30,20 @@ public class SongCrawlerServiceImpl implements SongCrawlerService {
   // 歌曲音乐文件 API
   private static final String S_F_API_PREFIX = "http://neteaseapi.youkeda.com:3000/song/url?id=";
 
-  // okHttpClient 实例
-  private OkHttpClient okHttpClient;
+  //声明okHttpClient实例，用于发送HTTP请求
+  private OkHttpClient okHttpClient;  //okHttpClient是一个网络请求库，可以用于发送HTTP请求并获取响应
 
   // 歌单数据仓库
-  private Map<String, Artist> artists;
-
+  private Map<String, Artist> artists;  //Map类型的变量artists，用于保存歌单
+  //Map 是一种键值映射的数据结构，可以方便地根据键来查找对应的值
   private void init() {
-    //1. 构建 okHttpClient 实例
-    okHttpClient = new OkHttpClient();
-    artists = new HashMap<>();
+    okHttpClient = new OkHttpClient();  //构建 okHttpClient 实例
+    artists = new HashMap<>();  //初始化artists变量，将其赋值为空的HashMap实例，artists就可以用于储存歌单数据了
   }
 
   @Override
   public void start(String artistId) {
-    // 参数判断，未输入参数则直接返回
+    // 空字符串或者内容为空，则表示未输入参数
     if (artistId == null || artistId.equals("")) {
       return;
     }
@@ -63,53 +60,53 @@ public class SongCrawlerServiceImpl implements SongCrawlerService {
   }
 
   @Override
-  public Artist getArtist(String artistId) {
+  public Artist getArtist(String artistId) {  //获取指定歌手ID对应的歌手对象
     return artists.get(artistId);
   }
 
   @Override
   public Song getSong(String artistId, String songId) {
-    Artist artist = artists.get(artistId);
-    List<Song> songs = artist.getSongList();
+    Artist artist = artists.get(artistId);  //获取指定歌手ID对应的歌手对象，并赋值给artist
+    List<Song> songs = artist.getSongList();  //获取歌手对象的歌曲列表，赋值给songs
 
-    if (songs == null) {
+    if (songs == null) {  //歌手没有歌曲列表
       return null;
     }
 
-    for (Song song : songs) {
-      if (song.getId().equals(songId)) {
+    for (Song song : songs) {  //循环遍历songs列表中的每一首歌曲
+      if (song.getId().equals(songId)) {  //判断当前的ID与传入的ID相等，则找到对应的歌曲
         return song;
       }
     }
     return null;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked")  //指示编译器忽略"未检查的转换"的警告
   private Map getSourceDataObj(String prefix, String postfix) {
     // 构建歌单url
     String aUrl = prefix + postfix;
-    // 调用 okhttp3 获取返回数据
+    // 调用okhttp3获取返回数据
     String content = getPageContentSync(aUrl);
-    // 反序列化成 Map 对象
+    // 反序列化成Map对象
     Map returnData = JSON.parseObject(content, Map.class);
 
     return returnData;
-  }
+  }  //构建歌单的URL,通过发起HTTP请求获取返回的数据，将返回的数据反序列化成Map对象，并将其作为方法的返回值
 
   @SuppressWarnings("unchecked")
-  private Artist buildArtist(Map returnData) {
-    // 从 Map 对象中取得 歌单 数据。歌单也是一个子 Map 对象。
-    Map artistData = (Map) returnData.get("artist");
+  private Artist buildArtist(Map returnData) {  //根据传入的Map对象构建一个代表歌手信息的Artist对象
+
+    Map artistData = (Map) returnData.get("artist");  //从传入的Map对象中获取名为"artist"的子Map对象，并将其赋值给artistData
     Artist artist = new Artist();
-    artist.setId(artistData.get("id").toString());
+    artist.setId(artistData.get("id").toString());  //获取歌手ID
     if (artistData.get("picUrl") != null) {
-      artist.setPicUrl(artistData.get("picUrl").toString());
-    }
+      artist.setPicUrl(artistData.get("picUrl").toString());  //获取图片URL
+    }//依次获取歌手的简介、头像URL、名字和别名，使用对应的get()方法获取数据，再调用对应的 set() 方法设置到 artist 对象中
     artist.setBriefDesc(artistData.get("briefDesc").toString());
     artist.setImg1v1Url(artistData.get("img1v1Url").toString());
     artist.setName(artistData.get("name").toString());
     artist.setAlias((List) artistData.get("alias"));
-    return artist;
+    return artist;  //将歌手对象返回
   }
 
   private List<Song> buildSongs(Map returnData) {
