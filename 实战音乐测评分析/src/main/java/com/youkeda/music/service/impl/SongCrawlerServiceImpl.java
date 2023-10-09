@@ -109,13 +109,13 @@ public class SongCrawlerServiceImpl implements SongCrawlerService {
     return artist;  //将歌手对象返回
   }
 
-  private List<Song> buildSongs(Map returnData) {
-    // 从 Map 对象中取得一组 歌曲 数据
-    List songsData = (List) returnData.get("hotSongs");
-    List<Song> songs = new ArrayList<>();
+  private List<Song> buildSongs(Map returnData) {  //将传入的Map对象中的歌曲数据提取出来，封装成一个由Song对象组成的List返回
+
+    List songsData = (List) returnData.get("hotSongs");  //获取名为"hotSongs"的键对应的值
+    List<Song> songs = new ArrayList<>();  //创建空的List对象，存放提取出来的歌曲数据
 
     for (int i = 0; i < songsData.size(); i++) {
-      Map songData = (Map) songsData.get(i);
+      Map songData = (Map) songsData.get(i);  //取出一个歌曲数据的Map对象
       Song songObj = new Song();
       songObj.setId(songData.get("id").toString());
       songObj.setName(songData.get("name").toString());
@@ -123,69 +123,58 @@ public class SongCrawlerServiceImpl implements SongCrawlerService {
       songs.add(songObj);
     }
 
-    return songs;
+    return songs;  //返回组装好的歌曲列表songs
   }
 
-  /**
-   * 根据输入的url，读取页面内容并返回
-   */
-  private String getPageContentSync(String url) {
-    //2.定义一个request
-    Request request = new Request.Builder().url(url).build();
-    //3.使用client去请求
-    Call call = okHttpClient.newCall(request);
+  private String getPageContentSync(String url) {  //根据输入的url，读取页面内容并返回
+
+    Request request = new Request.Builder().url(url).build();  //创建Request对象并使用传入的url构建
+
+    Call call = okHttpClient.newCall(request);  //使用okHttpClient对象发起请求
     String result = null;
     try {
-      //4.获得返回结果
-      result = call.execute().body().string();
+      result = call.execute().body().string();  //调用call.execute()方法发送请求，并获取服务器的响应结果
       System.out.println("call " + url + " , content's size=" + result.length());
     } catch (IOException e) {
-      System.out.println("request " + url + " error . ");
+      System.out.println("request " + url + " error . ");  //出现异常则将异常信息打印到控制台输出
       e.printStackTrace();
     }
 
     return result;
-  }
+  }  //在请求数据时会阻塞程序，直到获取完整的响应数据才会返回结果
 
-  private void initArtistHotSongs(String artistId) {
-    // 取得整体数据对象。
-    Map returnData = getSourceDataObj(ARTIEST_API_PREFIX, artistId);
-    // 构建填充了属性的 Artist 实例
-    Artist artist = buildArtist(returnData);
-    // 构建一组填充了属性的 Song 实例
+  private void initArtistHotSongs(String artistId) {  //用于初始化一个艺术家的热门歌曲信息
+
+    Map returnData = getSourceDataObj(ARTIEST_API_PREFIX, artistId);//传入艺术家API的前缀和ID，获取Map对象returnData
+
+    Artist artist = buildArtist(returnData);  //构建一个填充了属性的Artist实例artist
     List<Song> songs = buildSongs(returnData);
-    // 歌曲填入歌单
+
     artist.setSongList(songs);
-    // 存入本地
-    artists.put(artist.getId(), artist);
+    artists.put(artist.getId(), artist);//将artist的ID作为键，artist实例作为值，存入名为artist的Map中
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked")  //忽略类型检查警告
   private void assembleSongDetail(String artistId) {
     Artist artist = getArtist(artistId);
-    // 取不到歌单说明参数输入错误
-    if (artist == null) {
+    
+    if (artist == null) {  //取不到歌单说明参数输入错误
       return;
-    }
+    }  //组装艺术家的歌曲详细信息,进一步对该艺术家对象的属性进行操作
 
-    // 删除其它语句，保留必要的语句
     List<Song> songs = artist.getSongList();
-    String sIdsParam = buildManyIdParam(songs);
-    // 抓取结果
-    Map songsDetailObj = getSourceDataObj(S_D_API_PREFIX, sIdsParam);
-    // 原始数据中的 songs 是歌曲列表
-    List<Map> sourceSongs = (List<Map>) songsDetailObj.get("songs");
-    // 临时的 Map
-    Map<String, Map> sourceSongsMap = new HashMap<>();
-    // 遍历歌曲列表
-    for (Map songSourceData : sourceSongs) {
-      String sId = songSourceData.get("id").toString();
-      // 原始歌曲数据对象放入一个临时的 Map 中
-      sourceSongsMap.put(sId, songSourceData);
+    String sIdsParam = buildManyIdParam(songs);  //获取多个歌曲的详细信息
+    Map songsDetailObj = getSourceDataObj(S_D_API_PREFIX, sIdsParam);  //获取一个包含歌曲详细信息(API地址前缀、参数)的Map对象
+
+    List<Map> sourceSongs = (List<Map>) songsDetailObj.get("songs");  //获取原始数据中的歌曲列表
+    Map<String, Map> sourceSongsMap = new HashMap<>();  //创建临时的Map对象sourceSongsMap
+
+    for (Map songSourceData : sourceSongs) {  //对每首歌的原始数据进行处理
+      String sId = songSourceData.get("id").toString();  //获取歌曲ID，转换为字符串类型
+      sourceSongsMap.put(sId, songSourceData);  //原始歌曲数据对象放入一个临时的Map中
     }
 
-    // 再次遍历歌单中的歌曲，填入详情数据
-    for (Song song : songs) {
+    for (Song song : songs) {  //再次遍历歌单中的歌曲，填入详情数据
       String sId = song.getId();
       // 从临时的Map中取得对应的歌曲源数据，使用id直接获取，比较方便
       Map songSourceData = sourceSongsMap.get(sId);
