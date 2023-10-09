@@ -5,13 +5,13 @@ import java.util.List;
 /**
  * 歌曲对象
  */
-public class Song {
+public class Song {  //一首歌曲对象
 
   private String id;
   private String name;
-  private List<User> singers;
-  private String sourceUrl;
-  private Album album;
+  private List<User> singers;  //歌曲的歌手列表
+  private String sourceUrl;  //歌曲的资源URL
+  private Album album;  //歌曲的专辑对象
   private List<Comment> hotComments;
   private List<Comment> comments;
 
