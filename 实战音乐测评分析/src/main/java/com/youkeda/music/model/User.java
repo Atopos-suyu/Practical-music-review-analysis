@@ -2,12 +2,12 @@ package com.youkeda.music.model;
 
 /**
  *
- */
-public class User {
+ */  //储存一个用户的相关信息
+public class User {  //表示一个用户对象
 
   private String id;
-  private String nickName;
-  private String avatar;
+  private String nickName;  //用户昵称
+  private String avatar;  //用户头像
 
   public String getId() {
     return id;
