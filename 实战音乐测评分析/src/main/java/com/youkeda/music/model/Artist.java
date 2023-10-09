@@ -5,15 +5,15 @@ import java.util.List;
 /**
  * 歌单对象
  */
-public class Artist {
+public class Artist {  //表示一个歌手对象
 
-  private String id;
-  private List<String> alias;
-  private String picUrl;
-  private String briefDesc;
-  private String img1v1Url;
-  private String name;
-  // 包含一组歌曲
+  private String id;  //歌手的唯一标识符
+  private List<String> alias;  //歌手的别名列表
+  private String picUrl;  //歌手的图片URL
+  private String briefDesc;  //歌手的简介
+  private String img1v1Url;  //歌手的小头像URL
+  private String name;  //歌手的名字
+  // 储存歌手的歌曲列表，包含一组歌曲
   private List<Song> songList;
 
   public String getId() {
