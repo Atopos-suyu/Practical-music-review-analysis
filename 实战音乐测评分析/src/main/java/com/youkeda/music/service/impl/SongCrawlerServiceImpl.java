@@ -175,82 +175,70 @@ public class SongCrawlerServiceImpl implements SongCrawlerService {
     }
 
     for (Song song : songs) {  //再次遍历歌单中的歌曲，填入详情数据
-      String sId = song.getId();
-      // 从临时的Map中取得对应的歌曲源数据，使用id直接获取，比较方便
-      Map songSourceData = sourceSongsMap.get(sId);
-      // 源歌曲数据中，ar 字段是歌手列表
-      List<Map> singersData = (List<Map>) songSourceData.get("ar");
-      // 歌手集合
-      List<User> singers = new ArrayList<>();
+      String sId = song.getId();  //对于每首歌曲，获取它的ID
+      Map songSourceData = sourceSongsMap.get(sId);//从临时的Map中取得对应的歌曲源数据，使用id直接获取，比较方便
+      List<Map> singersData = (List<Map>) songSourceData.get("ar");//源歌曲数据中，ar字段是歌手列表
+     
+      List<User> singers = new ArrayList<>();//创建List<User>集合singers,储存歌曲的所有歌手
       for (Map singerData : singersData) {
-        // 歌手对象
-        User singer = new User();
+        User singer = new User();  //创建歌手对象
         singer.setId(singerData.get("id").toString());
         singer.setNickName(singerData.get("name").toString());
-        // 歌手集合放入歌手对象
-        singers.add(singer);
+        singers.add(singer);  //将singer对象添加到singers集合中
       }
-      // 歌手集合放入歌曲
-      song.setSingers(singers);
+    
+      song.setSingers(singers);  //将singers集合赋值给歌曲对象的singers属性
 
       // 专辑
-      Map albumData = (Map) songSourceData.get("al");
+      Map albumData = (Map) songSourceData.get("al");  //获取专辑数据
       Album album = new Album();
       album.setId(albumData.get("id").toString());
       album.setName(albumData.get("name").toString());
-      if (albumData.get("picUrl") != null) {
+      if (albumData.get("picUrl") != null) {  //如果专辑数据中有PicUrl字段
         album.setPicUrl(albumData.get("picUrl").toString());
       }
-      // 专辑对象放入歌曲
-      song.setAlbum(album);
+      song.setAlbum(album);  //专辑对象放入歌曲
     }
   }
 
   @SuppressWarnings("unchecked")
   private void assembleSongComment(String artistId) {
-    Artist artist = getArtist(artistId);
-    // 取不到歌单说明参数输入错误
-    if (artist == null) {
+    Artist artist = getArtist(artistId);  //根据传入的歌手ID获取对应的艺人对象artist
+    
+    if (artist == null) {  //取不到歌单说明artistId输入错误
       return;
     }
 
-    List<Song> songs = artist.getSongList();
+    List<Song> songs = artist.getSongList();  //从artist中取出该艺人的歌曲列表songs
     for (Song song : songs) {
-      String sIdsParam = song.getId() + "&limit=5";
-      // 抓取结果
-      Map songsCommentObj = getSourceDataObj(S_C_API_PREFIX, sIdsParam);
-      // 热门评论列表
-      List<Map> hotCommentsObj = (List<Map>) songsCommentObj.get("hotComments");
-      // 热门评论列表
-      List<Map> commontsObj = (List<Map>) songsCommentObj.get("comments");
+      String sIdsParam = song.getId() + "&limit=5";  //将歌曲ID和limit=5构成请求参数字符串sIdsParam
+     
+      Map songsCommentObj = getSourceDataObj(S_C_API_PREFIX, sIdsParam);  //从API接口中抓取该歌曲的热门评论储存
+      List<Map> hotCommentsObj = (List<Map>) songsCommentObj.get("hotComments");  //获取热门评论
+      List<Map> commontsObj = (List<Map>) songsCommentObj.get("comments");  // 获取最新评论
 
       song.setHotComments(buildComments(hotCommentsObj));
-      song.setComments(buildComments(commontsObj));
+      song.setComments(buildComments(commontsObj));  //构建评论集合并赋值给对应的对象属性
     }
-  }
+  }  //通过在线API接口获取歌曲的评论数据并添加到对应歌曲对象的hotComment和comment属性中供后续使用
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked")  //为每首歌曲添加音乐文件的URL地址
   private void assembleSongUrl(String artistId) {
     Artist artist = getArtist(artistId);
-    // 取不到歌单说明参数输入错误
-    if (artist == null) {
+    if (artist == null) {  //取不到歌单说明参数输入错误
       return;
     }
 
-    // 删除其它语句，保留必要的语句
-    List<Song> songs = artist.getSongList();
-    String sIdsParam = buildManyIdParam(songs);
-    // 抓取结果
-    Map songsFileObj = getSourceDataObj(S_F_API_PREFIX, sIdsParam);
-    // 原始数据中的 data 是音乐文件列表
-    List<Map> datas = (List<Map>) songsFileObj.get("data");
-    // 临时的 Map
-    Map<String, Map> sourceSongsMap = new HashMap<>();
+    List<Song> songs = artist.getSongList();  //从artist对象中取出该艺人的歌曲列表songs
+    String sIdsParam = buildManyIdParam(songs);  //构建参数字符串sIdsParam,包含所有歌曲id
+
+    Map songsFileObj = getSourceDataObj(S_F_API_PREFIX, sIdsParam);  //从在线API接口中抓取包含所有歌曲音乐文件信息的数据，储存在Map对象中
+    List<Map> datas = (List<Map>) songsFileObj.get("data");  //从songsFileObj中取出音乐文件列表datas
+    Map<String, Map> sourceSongsMap = new HashMap<>();   //临时的Map
     // 遍历音乐文件列表
     for (Map songFileData : datas) {
-      String sId = songFileData.get("id").toString();
-      // 原始音乐文件数据对象放入一个临时的 Map 中
-      sourceSongsMap.put(sId, songFileData);
+      String sId = songFileData.get("id").toString(); 
+      sourceSongsMap.put(sId, songFileData);  //原始音乐文件数据对象放入一个临时的Map中
     }
 
     // 再次遍历歌单中的歌曲，填入音乐文件URL
@@ -258,41 +246,38 @@ public class SongCrawlerServiceImpl implements SongCrawlerService {
       String sId = song.getId();
       // 从临时的Map中取得对应的音乐文件源数据，使用id直接获取，比较方便
       Map songFileData = sourceSongsMap.get(sId);
-      // 源音乐文件数据中，url 字段就是文件地址
+      // 源音乐文件数据中，url字段就是文件地址
       if (songFileData != null && songFileData.get("url") != null) {
-        String songFileUrl = songFileData.get("url").toString();
+        String songFileUrl = songFileData.get("url").toString();  //取出url字段对应的字符串，作为该歌曲的音乐文件URL地址，赋值给sourceUrl属性
         song.setSourceUrl(songFileUrl);
       }
     }
   }
-
-  private void generateWordCloud(String artistId) {
+//通过在线API接口获取歌曲的音乐文件信息，以及构建歌曲ID和音乐文件数据对象之间的映射关系，从而便于后续为每首歌曲添加对应的音乐文件URL地址
+  private void generateWordCloud(String artistId) {  //生成艺人歌曲风格的词云图
     Artist artist = getArtist(artistId);
-    // 取不到歌单说明参数输入错误
-    if (artist == null) {
+    if (artist == null) {  //取不到歌单说明参数输入错误
       return;
     }
 
-    List<Song> songs = artist.getSongList();
-    List<String> contents = new ArrayList<>();
+    List<Song> songs = artist.getSongList();  //获取艺人对象artist歌曲列表
+    List<String> contents = new ArrayList<>();  //存取歌曲评论的额内容
     for (Song song : songs) {
-      // 遍历歌曲所有的评论，包括普通评论和热门评论，把评论内容字符串存入集合
       collectContent(song.getComments(), contents);
       collectContent(song.getHotComments(), contents);
-    }
+    }//遍历歌曲所有的评论，包括普通评论和热门评论，把评论内容字符串存入集合
 
-    // 制作词云
-    WordCloudUtil.generate(artistId, contents);
+    WordCloudUtil.generate(artistId, contents);  //制作词云
   }
 
-  private void collectContent(List<Comment> comments, List<String> contents) {
+  private void collectContent(List<Comment> comments, List<String> contents) {  //参数：评论对象列表，空字符串集合
     for (Comment comment : comments) {
-      contents.add(comment.getContent());
+      contents.add(comment.getContent());  //获取评论内容并添加
     }
   }
-
-  private List<Comment> buildComments(List<Map> commontsObj) {
-    List<Comment> comments = new ArrayList<>();
+  //将评论对象数据构建成一个评论对象列表
+  private List<Comment> buildComments(List<Map> commontsObj) {  //传入包含评论对象数据的列表
+    List<Comment> comments = new ArrayList<>();  //创建空评论对象列表comments
 
     for (Map sourceComment : commontsObj) {
       Comment commont = new Comment();
@@ -300,22 +285,21 @@ public class SongCrawlerServiceImpl implements SongCrawlerService {
       commont.setId(sourceComment.get("commentId").toString());
       commont.setLikedCount(sourceComment.get("likedCount").toString());
       commont.setTime(sourceComment.get("time").toString());
-
+      //获取用户评论内容、评论ID、点赞数、评论时间
       User user = new User();
       Map sourceUserData = (Map) sourceComment.get("user");
       user.setId(sourceUserData.get("userId").toString());
       user.setNickName(sourceUserData.get("nickname").toString());
       user.setAvatar(sourceUserData.get("avatarUrl").toString());
       commont.setCommentUser(user);
-
-      comments.add(commont);
+      //获取用户数据，将用户ID、昵称、头像URL设置到user对象的属性中
+      comments.add(commont);  //将构建好的comment对象添加到评论对象列表中
     }
-
     return comments;
   }
 
   private String buildManyIdParam(List<Song> songs) {
-    // 收集一个歌单中所有歌曲的id，放入一个list
+    //收集一个歌单中所有歌曲的id，放入一个list
     List<String> songIds = new ArrayList<>();
     for (Song song : songs) {
       songIds.add(song.getId());
