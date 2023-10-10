@@ -16,17 +16,12 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 
-/**
- * 生成图云的工具类
- */
+  //生成图云的工具类
 public class WordCloudUtil {
-
-  /**
-   * 生成词云
-   *
-   * @param artistId 歌单id
-   * @param texts 文本
-   */
+  
+    //生成词云
+    //@param artistId 歌单id
+    //@param texts 文本
   public static void generate(String artistId, List<String> texts) {
 
     FrequencyAnalyzer frequencyAnalyzer = new FrequencyAnalyzer();
