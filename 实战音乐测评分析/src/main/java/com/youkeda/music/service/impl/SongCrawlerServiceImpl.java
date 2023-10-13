@@ -40,7 +40,7 @@ public class SongCrawlerServiceImpl implements SongCrawlerService {
     okHttpClient = new OkHttpClient();  //构建 okHttpClient 实例
     artists = new HashMap<>();  //初始化artists变量，将其赋值为空的HashMap实例，artists就可以用于储存歌单数据了
   }
-
+//当子类继承自父类并且重写了父类中的某个方法时，可以使用@Override注解来显式地告知编译器，这是对父类方法的覆盖
   @Override
   public void start(String artistId) {
     // 空字符串或者内容为空，则表示未输入参数
@@ -81,7 +81,7 @@ public class SongCrawlerServiceImpl implements SongCrawlerService {
     return null;
   }
 
-  @SuppressWarnings("unchecked")  //指示编译器忽略"未检查的转换"的警告
+  @SuppressWarnings("unchecked")  //用于抑制Java编译器产生的“未检查类型转换”警告
   private Map getSourceDataObj(String prefix, String postfix) {
     // 构建歌单url
     String aUrl = prefix + postfix;
@@ -89,7 +89,7 @@ public class SongCrawlerServiceImpl implements SongCrawlerService {
     String content = getPageContentSync(aUrl);
     // 反序列化成Map对象
     Map returnData = JSON.parseObject(content, Map.class);
-
+//反序列化指的是将对象从持久化的状态（如文件、数据库）转换回内存对象的过程
     return returnData;
   }  //构建歌单的URL,通过发起HTTP请求获取返回的数据，将返回的数据反序列化成Map对象，并将其作为方法的返回值
 
